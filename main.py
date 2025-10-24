@@ -1,20 +1,21 @@
 from assistant import VoiceAssistant
 
 def main():
-    print("🚀 Starting Enhanced Buddy Assistant...")
-    print("🔧 Initializing natural language processing...")
+    print("🚀 Starting Real Human-Like AI Assistant...")
+    print("🔧 Initializing advanced AI system...")
     print("🎯 Features:")
-    print("   • Continuous listening - no wake word needed")
     print("   • Natural human-like conversations")
-    print("   • Urdu and English understanding")
-    print("   • Real-time system control")
-    print("   • Female personality with emotions")
+    print("   • Full system control")
+    print("   • Intelligent command understanding") 
+    print("   • Continuous listening")
+    print("   • Memory and preferences")
     print("-" * 60)
     
     try:
         assistant = VoiceAssistant()
-        print("✅ Buddy is ready!")
-        print("💬 Just start speaking naturally...")
+        print("✅ Buddy is fully operational!")
+        print("💬 Just speak naturally - I understand everything!")
+        print("🛠️  Try: 'Open Chrome', 'Search for weather', 'Play music', 'Write a note'")
         print("⏹️  Say 'exit', 'quit', or 'bye' to stop")
         print("-" * 60)
         
