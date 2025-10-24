@@ -1,30 +1,39 @@
 import speech_recognition as sr
 import pyttsx3
+from config import WAKE_WORD, LANGUAGE, LISTEN_TIMEOUT, COMMAND_TIMEOUT
+from language_manager import LanguageManager
 
 class VoiceEngine:
     def __init__(self):
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
         self.tts_engine = pyttsx3.init()
+        self.language_manager = LanguageManager()
         self.setup_voice()
     
     def setup_voice(self):
         """Configure text-to-speech settings"""
         voices = self.tts_engine.getProperty('voices')
-        self.tts_engine.setProperty('voice', voices[1].id)  # Female voice
+        # Use available voices (index might vary by system)
+        if len(voices) > 1:
+            self.tts_engine.setProperty('voice', voices[1].id)  # Female voice
         self.tts_engine.setProperty('rate', 150)
         self.tts_engine.setProperty('volume', 0.8)
     
+    def set_language(self, language):
+        """Set language for voice engine"""
+        return self.language_manager.set_language(language)
+    
     def speak(self, text):
         """Convert text to speech"""
-        print(f"🤖 Assistant: {text}")
+        print(f"🤖 Buddy: {text}")
         self.tts_engine.say(text)
         self.tts_engine.runAndWait()
     
     def listen_for_wake_word(self):
         """Continuously listen for the wake word"""
         with self.microphone as source:
-            print("🔊 Listening for wake word...")
+            print(self.language_manager.get_text("listening_for_wake"))
             self.recognizer.adjust_for_ambient_noise(source)
             
             try:
@@ -43,7 +52,7 @@ class VoiceEngine:
     def listen_for_command(self):
         """Listen for command after wake word"""
         with self.microphone as source:
-            print("🎯 Listening for command...")
+            print(self.language_manager.get_text("listening_for_command"))
             self.recognizer.adjust_for_ambient_noise(source)
             
             try:
