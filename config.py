@@ -1,6 +1,7 @@
 # Configuration settings
 WAKE_WORD = "buddy"
-LANGUAGE = "english"  # Default language: "english" or "urdu"
-COMMAND_TIMEOUT = 10  # Increased timeout
-LISTEN_TIMEOUT = 3    # Reduced for wake word
+LANGUAGE = "english"
+CONTINUOUS_LISTENING = True
 ENERGY_THRESHOLD = 300
+SPEECH_RATE = 170
+VOLUME = 0.9
