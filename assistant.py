@@ -87,35 +87,39 @@ class VoiceAssistant:
             return self.ai_brain.process_query(command)
     
     def run(self):
-    """Main assistant loop"""
-    self.voice_engine.speak(self.voice_engine.language_manager.get_text("activated"))
-    self.is_listening = True
-    
-    while self.is_listening:
-        # Listen for wake word
-        wake_text = self.voice_engine.listen_for_wake_word()
+        """Main assistant loop"""
+        self.voice_engine.speak(self.voice_engine.language_manager.get_text("activated"))
+        self.is_listening = True
         
-        # Improved wake word detection
-        wake_words = ['buddy', 'body', 'badi', 'بڈی', 'بدی']  # Common variations
-        wake_word_detected = any(wake_word in wake_text for wake_word in wake_words)
-        
-        if wake_word_detected or any(greeting in wake_text for greeting in ['hello', 'hi', 'hey', 'ہیلو', 'اسلام علیکم', 'آداب']):
-            if wake_word_detected:
-                self.voice_engine.speak(self.voice_engine.language_manager.get_text("listening"))
-            else:
-                # Respond to direct greetings without wake word
-                response = self.ai_brain.process_query(wake_text)
-                self.voice_engine.speak(response)
-                continue
+        while self.is_listening:
+            # Listen for wake word or direct commands
+            wake_text = self.voice_engine.listen_for_wake_word()
             
-            # Listen for command
-            command = self.voice_engine.listen_for_command()
+            # Improved wake word detection with variations
+            wake_words = ['buddy', 'body', 'badi', 'بڈی', 'بدی']
+            wake_word_detected = any(wake_word in wake_text for wake_word in wake_words)
             
-            if command:
-                # Process the command
-                response = self.process_command(command)
-                self.voice_engine.speak(response)
+            # Also respond to direct greetings
+            greetings = ['hello', 'hi', 'hey', 'ہیلو', 'اسلام علیکم', 'آداب']
+            direct_greeting = any(greeting in wake_text for greeting in greetings)
+            
+            if wake_word_detected or direct_greeting:
+                if wake_word_detected:
+                    self.voice_engine.speak(self.voice_engine.language_manager.get_text("listening"))
+                else:
+                    # If user directly greeted, respond and continue listening
+                    response = self.ai_brain.process_query(wake_text)
+                    self.voice_engine.speak(response)
+                    continue
                 
-                # Check if we should exit
-                if not self.is_listening:
-                    break
+                # Listen for command after wake word
+                command = self.voice_engine.listen_for_command()
+                
+                if command:
+                    # Process the command
+                    response = self.process_command(command)
+                    self.voice_engine.speak(response)
+                    
+                    # Check if we should exit
+                    if not self.is_listening:
+                        break
