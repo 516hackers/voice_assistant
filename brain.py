@@ -1,305 +1,202 @@
 import datetime
 import random
+import re
 from language_manager import LanguageManager
+from personality import Personality
 
 class AIBrain:
     def __init__(self):
-        self.conversation_context = {}
-        self.learned_commands = {}
-        self.user_preferences = {}
         self.language_manager = LanguageManager()
-    
+        self.personality = Personality()
+        self.conversation_context = {}
+        self.user_preferences = {}
+        
     def set_language(self, language):
-        """Set language for AI responses"""
         return self.language_manager.set_language(language)
     
-    def process_query(self, query, context=None):
-        """Main AI processing logic with Urdu support"""
+    def process_query(self, query):
+        """Main AI processing with natural language understanding"""
         query = query.lower().strip()
         
-        # Store context for follow-up questions
-        if context:
-            self.conversation_context.update(context)
+        # Store conversation context
+        self.personality.add_to_history(query, "")
+        
+        # Language detection and switching
+        lang_response = self._detect_and_switch_language(query)
+        if lang_response:
+            return lang_response
+        
+        # Natural conversation patterns
+        response = self._handle_natural_conversation(query)
+        if response:
+            return response
+        
+        # System commands with natural language
+        response = self._handle_system_commands(query)
+        if response:
+            return response
+        
+        # If nothing matched, provide helpful response
+        return self._provide_helpful_response(query)
+    
+    def _detect_and_switch_language(self, query):
+        """Detect and switch languages based on input"""
+        urdu_keywords = ['ہیلو', 'اسلام', 'کیا', 'کیسے', 'ہے', 'ہوں', 'تم', 'آپ', 'شکریہ', 'براہ', 'کرم', 'مدد']
+        english_keywords = ['hello', 'hi', 'how', 'what', 'when', 'where', 'why', 'help', 'thanks', 'thank']
+        
+        urdu_count = sum(1 for word in urdu_keywords if word in query)
+        english_count = sum(1 for word in english_keywords if word in query)
         
         # Language switching commands
-        if any(word in query for word in ['urdu', 'اردو']):
+        if any(word in query for word in ['urdu', 'اردو', 'urdu mein', 'urdu main']):
             self.set_language("urdu")
-            return "زباز تبدیل کر دی گئی ہے۔ اب میں اردو میں بات کروں گا۔"
+            return "زباز تبدیل کر دی گئی ہے۔ اب میں اردو میں بات کروں گی۔"
         
-        elif any(word in query for word in ['english', 'انگریزی']):
+        elif any(word in query for word in ['english', 'انگریزی', 'english mein', 'english main']):
             self.set_language("english")
-            return "Language changed to English. I will now speak in English."
+            return "Language changed to English. I'll speak in English now."
         
-        # Greetings and basic interaction
-        if any(word in query for word in ['hello', 'hi', 'hey', 'ہیلو', 'اسلام علیکم', 'آداب']):
-            return self._generate_greeting()
+        # Auto-detect language
+        if urdu_count > english_count and self.language_manager.current_language != "urdu":
+            self.set_language("urdu")
+            return "میں نے محسوس کیا آپ اردو بول رہے ہیں۔ اب میں اردو میں جواب دوں گی۔"
         
-        elif any(word in query for word in ['time', 'current time', 'وقت', 'کٹنا بجا']):
-            return self._get_current_time()
+        return None
+    
+    def _handle_natural_conversation(self, query):
+        """Handle natural human conversation"""
+        # Greetings
+        if any(word in query for word in ['hello', 'hi', 'hey', 'ہیلو', 'اسلام', 'آداب']):
+            return self.personality.get_greeting()
         
-        elif any(word in query for word in ['date', 'today', 'current date', 'تاریخ', 'آج']):
-            return self._get_current_date()
+        # Thanks
+        if any(word in query for word in ['thank', 'thanks', 'shukriya', 'شکریہ']):
+            return self.personality.get_thanks_response()
         
-        elif any(word in query for word in ['thank', 'thanks', 'شکریہ', 'شکریا']):
-            return self._generate_thanks_response()
+        # How are you
+        if any(word in query for word in ['how are you', 'how you doing', 'کیا حال ہے', 'آپ کیسے ہیں']):
+            responses = [
+                "I'm doing wonderful, thank you for asking! How about you?",
+                "I'm great! Just here and ready to help you. How are you doing?",
+                "Doing well, thanks! What's on your mind?",
+                "میں ٹھیک ہوں، شکریہ! آپ کیسے ہیں؟",
+                "بہت اچھی، آپ کا شکریہ! آپ سُنائیں؟"
+            ]
+            return random.choice(responses)
         
-        elif any(word in query for word in ['how are you', 'how you doing', 'کیا حال ہے', 'آپ کیسے ہیں']):
-            return self._generate_mood_response()
+        # Time queries
+        if any(word in query for word in ['time', 'وقت', 'kitna bajaa', 'کٹنا بجا']):
+            current_time = datetime.datetime.now().strftime("%I:%M %p")
+            if self.language_manager.current_language == "urdu":
+                return f"اب وقت ہے {current_time}"
+            else:
+                return f"The current time is {current_time}"
         
-        elif any(word in query for word in ['what can you do', 'your capabilities', 'کیا کر سکتے ہو', 'تمہاری صلاحیتیں']):
-            return self._list_capabilities()
+        # Date queries
+        if any(word in query for word in ['date', 'today', 'تاریخ', 'aaj', 'آج']):
+            current_date = datetime.datetime.now().strftime("%A, %B %d, %Y")
+            if self.language_manager.current_language == "urdu":
+                return f"آج کی تاریخ ہے {current_date}"
+            else:
+                return f"Today is {current_date}"
         
-        elif any(word in query for word in ['joke', 'tell joke', 'make me laugh', 'لطیفہ', 'چٹکلہ', 'ہنساؤ']):
+        # Jokes
+        if any(word in query for word in ['joke', 'funny', 'laugh', 'چٹکلہ', 'لطیفہ', 'ہنساؤ']):
             return self._tell_joke()
         
-        elif any(word in query for word in ['calculate', 'math', 'what is', 'حساب کرو', 'حساب کتاب']):
-            return self._simple_calculation(query)
-        
-        elif any(word in query for word in ['who are you', 'your name', 'introduce yourself', 'تم کون ہو', 'اپنا تعارف کرواؤ']):
+        # Personal questions
+        if any(word in query for word in ['who are you', 'your name', 'تم کون ہو', 'آپ کا نام']):
             return self._introduce_self()
         
-        elif any(word in query for word in ['weather', 'temperature', 'موسم', 'درجہ حرارت']):
+        # Weather
+        if any(word in query for word in ['weather', 'موسم', 'temperature', 'درجہ حرارت']):
             return self._respond_to_weather_query()
         
-        elif any(word in query for word in ['remember that', 'remember this', 'یاد رکھو', 'یاد کرلو']):
-            return self._remember_information(query)
-        
-        elif any(word in query for word in ['what did i say', 'recall that', 'میں نے کیا کہا تھا', 'یاد کرو']):
-            return self._recall_information()
-        
-        else:
-            return self._handle_unknown_query(query)
+        return None
     
-    def _generate_greeting(self):
-        """Generate contextual greeting"""
-        hour = datetime.datetime.now().hour
+    def _handle_system_commands(self, query):
+        """Handle system commands in natural language"""
+        # Opening applications
+        open_patterns = [
+            r'(?:open|start|launch|run|kholo|کھولو)\s+(.+)',
+            r'(?:chal|چل)\s+(.+)',
+            r'(?:please|براہ کرم)\s+(?:open|kholo|کھولو)\s+(.+)'
+        ]
         
-        if self.language_manager.current_language == "urdu":
-            if 5 <= hour < 12:
-                greeting = "صبح بخیر!"
-            elif 12 <= hour < 18:
-                greeting = "دوپہر بخیر!"
-            else:
-                greeting = "شام بخیر!"
-            
-            responses = [
-                f"{greeting} میں آپ کی کس طرح مدد کر سکتا ہوں؟",
-                f"{greeting} آپ کے لیے کیا کر سکتا ہوں؟",
-                f"{greeting} میں آپ کی خدمت کے لیے حاضر ہوں!"
-            ]
-        else:
-            if 5 <= hour < 12:
-                greeting = "Good morning!"
-            elif 12 <= hour < 18:
-                greeting = "Good afternoon!"
-            else:
-                greeting = "Good evening!"
-            
-            responses = [
-                f"{greeting} How can I assist you today?",
-                f"{greeting} What can I do for you?",
-                f"{greeting} I'm here to help!"
-            ]
+        for pattern in open_patterns:
+            match = re.search(pattern, query)
+            if match:
+                app_name = match.group(1).strip()
+                return f"I'll open {app_name} for you"
         
-        return random.choice(responses)
-    
-    def _get_current_time(self):
-        """Get current time"""
-        current_time = datetime.datetime.now().strftime("%I:%M %p")
+        # Volume control
+        if any(word in query for word in ['volume up', 'increase volume', 'awaz barhao', 'آواز بڑھاؤ']):
+            return self.language_manager.get_text("volume_up")
         
-        if self.language_manager.current_language == "urdu":
-            return f"موجودہ وقت {current_time} ہے"
-        else:
-            return f"The current time is {current_time}"
-    
-    def _get_current_date(self):
-        """Get current date"""
-        current_date = datetime.datetime.now().strftime("%A, %B %d, %Y")
+        if any(word in query for word in ['volume down', 'decrease volume', 'awaz ghatao', 'آواز گھٹاؤ']):
+            return self.language_manager.get_text("volume_down")
         
-        if self.language_manager.current_language == "urdu":
-            return f"آج {current_date} ہے"
-        else:
-            return f"Today is {current_date}"
-    
-    def _generate_thanks_response(self):
-        """Respond to thanks"""
-        if self.language_manager.current_language == "urdu":
-            responses = [
-                "خوش آمدید!",
-                "مدد کر کے خوشی ہوئی!",
-                "کسی بھی وقت!",
-                "خوشی ہوئی کہ میں مدد کر سکا!"
-            ]
-        else:
-            responses = [
-                "You're welcome!",
-                "Happy to help!",
-                "Anytime!",
-                "Glad I could assist you!"
-            ]
+        if any(word in query for word in ['mute', 'silent', 'khamosh', 'خاموش']):
+            return self.language_manager.get_text("volume_mute")
         
-        return random.choice(responses)
-    
-    def _generate_mood_response(self):
-        """Respond to how are you"""
-        if self.language_manager.current_language == "urdu":
-            moods = [
-                "میں بہترین طریقے سے کام کر رہا ہوں، پوچھنے کا شکریہ!",
-                "میں ٹھیک ہوں! آپ کی مدد کے لیے تیار ہوں۔",
-                "تمام سسٹمز کام کر رہے ہیں! میں آپ کی کس طرح مدد کر سکتا ہوں؟",
-                "آج میں بہتر طریقے سے چل رہا ہوں!"
-            ]
-        else:
-            moods = [
-                "I'm functioning optimally, thank you for asking!",
-                "I'm doing great! Ready to help you.",
-                "All systems are operational! How can I assist you?",
-                "I'm running smoothly today!"
-            ]
+        # Screenshot
+        if any(word in query for word in ['screenshot', 'screen shot', 'screnshot', 'سکرین شاٹ']):
+            return self.language_manager.get_text("screenshot")
         
-        return random.choice(moods)
-    
-    def _list_capabilities(self):
-        """List what the assistant can do"""
-        capabilities = self.language_manager.get_text("capabilities")
-        return "\n".join(capabilities)
+        # Typing
+        if 'type' in query or 'type karo' in query or 'ٹائپ' in query:
+            text_to_type = query.replace('type', '').replace('type karo', '').replace('ٹائپ', '').strip()
+            if text_to_type:
+                return f"I'll type: {text_to_type}"
+        
+        return None
     
     def _tell_joke(self):
-        """Tell a random joke"""
+        """Tell contextually appropriate jokes"""
         if self.language_manager.current_language == "urdu":
             jokes = [
-                "ایک استاد نے طالب علم سے پوچھا: تمہاری عمر کتنی ہے؟ طالب علم بولا: ابھی تو پوری ہے سر!",
-                "ایک آدمی ڈاکٹر کے پاس گیا اور کہا: ڈاکٹر صاحب، میں سوچتا بہت زیادہ ہوں۔ ڈاکٹر بولا: کوئی بات نہیں، آپ کی یہ بیماری بھی جلد ختم ہو جائے گی!",
-                "بیٹا: ابو، آپ کو پتہ ہے کہ مچھلی کیوں پڑھائی نہیں کرتی؟ باپ: کیوں؟ بیٹا: کیونکہ اس کا دماغ پانی میں ڈوبا رہتا ہے!",
-                "استاد: تمہارے گھر میں سب سے ذہین کون ہے؟ طالب علم: میرا کتا۔ استاد: تمہیں کیسے پتہ؟ طالب علم: وہ ہر وقت پڑھائی کے بارے میں بات کرتا ہے، ہر وقت کہتا رہتا ہے: 'وع وع'!"
+                "کیا آپ جانتے ہیں کمپیوٹرز کیوں ڈرتے ہیں؟ کیونکہ ان کے وائرس ہوتے ہیں!",
+                "ایک استاد نے پوچھا: بیٹا، 2 اور 2 کیا ہوتے ہیں؟ بچہ بولا: جناب، 4! استاد: شاباش! بچہ: اور 4 اور 4؟ استاد: 8! بچہ: اور 8 اور 8؟ استاد: 16! بچہ: اور 16 اور 16؟ استاد: 32! بچہ: اور 32 اور 32؟ استاد: بس کر! تمہیں پتہ ہے میں کون ہوں؟ بچہ: جناب، آپ کیلکولیٹر ہیں!",
+                "ایک آدمی ڈاکٹر کے پاس گیا اور کہا: ڈاکٹر صاحب، میں سوچتا بہت زیادہ ہوں۔ ڈاکٹر بولا: کوئی بات نہیں، آپ کی یہ بیماری بھی جلد ختم ہو جائے گی!"
             ]
         else:
             jokes = [
                 "Why don't scientists trust atoms? Because they make up everything!",
-                "Why did the scarecrow win an award? He was outstanding in his field!",
+                "I told my wife she was drawing her eyebrows too high. She looked surprised!",
                 "Why don't eggs tell jokes? They'd crack each other up!",
                 "What do you call a fake noodle? An impasta!",
-                "Why did the math book look so sad? Because it had too many problems!"
+                "I'm reading a book about anti-gravity. It's impossible to put down!"
             ]
-        
         return random.choice(jokes)
     
-    def _simple_calculation(self, query):
-        """Perform simple math calculations"""
-        try:
-            # Extract numbers and operation
-            if any(word in query for word in ['plus', 'جمع', 'اضافہ']):
-                numbers = [int(s) for s in query.split() if s.isdigit()]
-                if len(numbers) >= 2:
-                    result = sum(numbers)
-                    if self.language_manager.current_language == "urdu":
-                        return f"جواب ہے {result}"
-                    else:
-                        return f"The answer is {result}"
-            
-            elif any(word in query for word in ['minus', 'منفی', 'کم']):
-                numbers = [int(s) for s in query.split() if s.isdigit()]
-                if len(numbers) >= 2:
-                    result = numbers[0] - sum(numbers[1:])
-                    if self.language_manager.current_language == "urdu":
-                        return f"جواب ہے {result}"
-                    else:
-                        return f"The answer is {result}"
-            
-            elif any(word in query for word in ['multiply', 'times', 'ضرب', 'گنا']):
-                numbers = [int(s) for s in query.split() if s.isdigit()]
-                if len(numbers) >= 2:
-                    result = 1
-                    for num in numbers:
-                        result *= num
-                    if self.language_manager.current_language == "urdu":
-                        return f"جواب ہے {result}"
-                    else:
-                        return f"The answer is {result}"
-            
-            if self.language_manager.current_language == "urdu":
-                return "میں بنیادی جمع، تفریق، اور ضرب میں مدد کر سکتا ہوں۔ '5 جمع 3 حساب کرو' کہہ کر آزمائیں"
-            else:
-                return "I can help with basic addition, subtraction, and multiplication. Try saying 'calculate 5 plus 3'"
-        
-        except:
-            if self.language_manager.current_language == "urdu":
-                return "معذرت، میں یہ حساب نہیں کر سکا۔ براہ کرم آسان اعداد کے ساتھ دوبارہ کوشش کریں۔"
-            else:
-                return "Sorry, I couldn't calculate that. Please try again with simple numbers."
-    
     def _introduce_self(self):
-        """Introduce the assistant"""
+        """Natural self-introduction"""
         if self.language_manager.current_language == "urdu":
-            return "میں آپ کا ذاتی AI اسسٹنٹ بڈی ہوں! میں خالص پائیتھن میں بنایا گیا ہوں تاکہ آپ کے سسٹم کو کنٹرول کرنے اور سوالات کے جوابات دینے میں مدد کر سکوں۔ میں بیرونی APIs پر انحصار نہیں کرتا - جو کچھ بھی میں کرتا ہوں وہ براہ راست پروگرام کیا گیا ہے!"
+            return "میں بڈی ہوں، آپ کی ذاتی معاون! میں یہاں آپ کی ہر ممکن مدد کے لیے ہوں - چاہے کوئی کام کرنا ہو، کوئی سوال پوچھنا ہو، یا بس بات چیت کرنی ہو۔ مجھ سے قدرتی طور پر بات کریں، میں سمجھ جاؤں گی!"
         else:
-            return "I'm your custom AI assistant Buddy! I'm built with pure Python to help you control your system and answer questions. I don't rely on external APIs - everything I do is programmed directly!"
+            return "I'm Buddy, your personal assistant! I'm here to help you with anything you need - whether it's getting things done, answering questions, or just having a chat. Feel free to talk to me naturally!"
     
     def _respond_to_weather_query(self):
-        """Respond to weather queries"""
+        """Helpful response to weather queries"""
         if self.language_manager.current_language == "urdu":
-            responses = [
-                "میرے پاس لائیو موسمیاتی ڈیٹا نہیں ہے، لیکن درست معلومات کے لیے میں آپ کو موسم کی ویب سائٹ چیک کرنے کا مشورہ دیتا ہوں۔",
-                "موجودہ موسمی حالات کے لیے، آپ اپنی مقامی موسمی سروس چیک کر سکتے ہیں۔",
-                "میں موسمی سروسز سے منسلک نہیں ہوں، لیکن میں آپ کی موسم کی ویب سائٹ کھولنے میں مدد کر سکتا ہوں!"
-            ]
+            return "میں ابھی براہ راست موسم کی معلومات نہیں دے سکتی، لیکن میں آپ کے لیے موسم کی ویب سائٹ کھول سکتی ہوں۔ کیا آپ چاہیں گے کہ میں یہ کروں؟"
         else:
-            responses = [
-                "I don't have real-time weather data, but I recommend checking a weather website for accurate information.",
-                "For current weather conditions, you might want to check your local weather service.",
-                "I'm not connected to weather services, but I can help you open a weather website!"
-            ]
-        
-        return random.choice(responses)
+            return "I can't provide live weather updates right now, but I can open a weather website for you. Would you like me to do that?"
     
-    def _remember_information(self, query):
-        """Remember user information"""
-        # Extract information to remember
-        if self.language_manager.current_language == "urdu":
-            info = query.replace('یاد رکھو', '').replace('یاد کرلو', '').strip()
-        else:
-            info = query.replace('remember that', '').replace('remember this', '').strip()
-        
-        if info:
-            self.user_preferences['last_remembered'] = info
-            if self.language_manager.current_language == "urdu":
-                return f"میں یہ یاد رکھوں گا: {info}"
-            else:
-                return f"I'll remember that: {info}"
-        
-        if self.language_manager.current_language == "urdu":
-            return "آپ کیا چاہتے ہیں کہ میں یاد رکھوں؟"
-        else:
-            return "What would you like me to remember?"
-    
-    def _recall_information(self):
-        """Recall remembered information"""
-        if 'last_remembered' in self.user_preferences:
-            if self.language_manager.current_language == "urdu":
-                return f"آپ نے مجھے بتایا تھا: {self.user_preferences['last_remembered']}"
-            else:
-                return f"You told me: {self.user_preferences['last_remembered']}"
-        
-        if self.language_manager.current_language == "urdu":
-            return "میرے پاس ابھی تک کوئی چیز یاد نہیں ہے۔ 'یاد رکھو' کہہ کر مجھے کچھ بتائیں۔"
-        else:
-            return "I don't have anything remembered yet. Tell me something with 'remember that'."
-    
-    def _handle_unknown_query(self, query):
-        """Handle queries the AI doesn't understand"""
+    def _provide_helpful_response(self, query):
+        """Provide helpful response when query isn't understood"""
         if self.language_manager.current_language == "urdu":
             responses = [
-                f"میں سمجھا نہیں کہ '{query}' سے آپ کی کیا مراد ہے۔ براہ کرم اسے دوسرے الفاظ میں بیان کریں؟",
-                f"میں '{query}' نہیں سمجھ سکا۔ مجھے کچھ کھولنے، حساب کرنے، یا لطیفہ سنانے کو کہیں۔",
-                f"معذرت، میں ابھی سیکھ رہا ہوں۔ میں '{query}' نہیں سمجھ سکا۔",
-                f"کیا آپ '{query}' کو مختلف طریقے سے بیان کر سکتے ہیں؟ میں مدد کرنا چاہتا ہوں!"
+                f"معاف کیجئے گا، میں '{query}' پوری طرح نہیں سمجھ پائی۔ کیا آپ اسے مختلف الفاظ میں بیان کر سکتے ہیں؟",
+                f"میں ابھی '{query}' کے بارے میں پوری طرح واضح نہیں ہوں۔ کیا آپ مزید وضاحت کر سکتے ہیں؟",
+                "مجھے افسوس ہے، میں وہ نہیں سمجھ سکی۔ کیا آپ چاہیں گے کہ میں کوئی خاص کام کروں، یا کوئی سوال کا جواب دوں؟",
+                "ذرا اس کے بارے میں سوچتی ہوں... جی، میں ابھی اس کے لیے تیار نہیں ہوں۔ کیا آپ کچھ اور پوچھنا چاہیں گے؟"
             ]
         else:
             responses = [
-                f"I'm not sure how to help with '{query}'. Could you rephrase that?",
-                f"I don't understand '{query}'. Try asking me to open something, calculate, or tell you a joke.",
-                f"Sorry, I'm still learning. I didn't understand '{query}'.",
-                f"Could you explain '{query}' differently? I want to help!"
+                f"I'm sorry, I didn't quite understand '{query}'. Could you try saying it differently?",
+                f"I'm not entirely clear about '{query}'. Could you give me more details?",
+                "I apologize, I didn't catch that properly. Would you like me to do something specific, or answer a question?",
+                "Let me think about that... Hmm, I'm not quite equipped for that yet. Is there something else I can help you with?"
             ]
-        
         return random.choice(responses)
