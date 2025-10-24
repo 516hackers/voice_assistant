@@ -8,32 +8,34 @@ class CommandHandler:
     def __init__(self):
         self.applications = {
             'notepad': 'notepad.exe',
-            'calculator': 'calc.exe', 
+            'calculator': 'calc.exe',
             'paint': 'mspaint.exe',
             'file explorer': 'explorer.exe',
             'cmd': 'cmd.exe',
             'browser': 'chrome.exe',
+            'chrome': 'chrome.exe',
+            'firefox': 'firefox.exe',
             'word': 'winword.exe',
-            'excel': 'excel.exe'
+            'excel': 'excel.exe',
+            'powerpoint': 'powerpnt.exe',
+            'media player': 'wmplayer.exe'
         }
         
         self.websites = {
             'youtube': 'https://www.youtube.com',
-            'google': 'https://www.google.com', 
+            'google': 'https://www.google.com',
             'github': 'https://www.github.com',
             'facebook': 'https://www.facebook.com',
             'twitter': 'https://www.twitter.com',
-            'instagram': 'https://www.instagram.com'
+            'instagram': 'https://www.instagram.com',
+            'whatsapp': 'https://web.whatsapp.com',
+            'gmail': 'https://mail.google.com'
         }
         
         self.language_manager = LanguageManager()
     
-    def set_language(self, language):
-        """Set language for command responses"""
-        return self.language_manager.set_language(language)
-    
     def execute_command(self, command_type, target=None):
-        """Execute system commands"""
+        """Execute system commands with natural language understanding"""
         try:
             if command_type == "open_app":
                 return self._open_application(target)
@@ -57,47 +59,57 @@ class CommandHandler:
                 return self._close_window()
             elif command_type == "shutdown":
                 return self._shutdown()
+            elif command_type == "search":
+                return self._search_web(target)
             else:
-                return False, "Unknown command type"
+                return False, "I'm not sure how to do that yet."
         except Exception as e:
-            return False, f"Error executing command: {str(e)}"
+            return False, f"Sorry, I encountered an issue: {str(e)}"
     
     def _open_application(self, app_name):
-        """Open applications"""
-        app_key = app_name.lower()
-        if app_key in self.applications:
-            os.system(f"start {self.applications[app_key]}")
-            return True, f"{self.language_manager.get_text('opening')} {app_name}"
-        else:
-            # Try to open directly
-            try:
-                os.system(f"start {app_name}")
-                return True, f"{self.language_manager.get_text('opening')} {app_name}"
-            except:
-                return False, f"Could not find application: {app_name}"
+        """Open applications with fuzzy matching"""
+        app_name_lower = app_name.lower()
+        
+        # Fuzzy matching for common applications
+        for key, value in self.applications.items():
+            if key in app_name_lower or app_name_lower in key:
+                try:
+                    os.system(f"start {value}")
+                    return True, f"Opening {key} for you"
+                except:
+                    pass
+        
+        # Try direct opening
+        try:
+            os.system(f"start {app_name}")
+            return True, f"Opening {app_name}"
+        except:
+            return False, f"Sorry, I couldn't find {app_name}"
     
     def _open_website(self, site_name):
-        """Open websites"""
-        site_key = site_name.lower()
-        if site_key in self.websites:
-            webbrowser.open(self.websites[site_key])
-            return True, f"{self.language_manager.get_text('opening')} {site_name}"
-        else:
-            # Try to open as URL
-            if not site_name.startswith(('http://', 'https://')):
-                site_name = 'https://' + site_name
-            webbrowser.open(site_name)
-            return True, f"{self.language_manager.get_text('opening')} website"
+        """Open websites with fuzzy matching"""
+        site_name_lower = site_name.lower()
+        
+        for key, value in self.websites.items():
+            if key in site_name_lower or site_name_lower in key:
+                webbrowser.open(value)
+                return True, f"Opening {key}"
+        
+        # Try as direct URL
+        if not site_name.startswith(('http://', 'https://')):
+            site_name = 'https://' + site_name
+        webbrowser.open(site_name)
+        return True, "Opening that website"
     
     def _volume_up(self):
         """Increase volume"""
-        for _ in range(5):
+        for _ in range(3):
             pyautogui.press('volumeup')
         return True, self.language_manager.get_text("volume_up")
     
     def _volume_down(self):
         """Decrease volume"""
-        for _ in range(5):
+        for _ in range(3):
             pyautogui.press('volumedown')
         return True, self.language_manager.get_text("volume_down")
     
@@ -109,22 +121,23 @@ class CommandHandler:
     def _take_screenshot(self):
         """Take screenshot"""
         screenshot = pyautogui.screenshot()
-        screenshot.save("screenshot.png")
+        filename = f"screenshot_{pyautogui.time()}.png"
+        screenshot.save(filename)
         return True, self.language_manager.get_text("screenshot")
     
     def _type_text(self, text):
-        """Type text"""
-        pyautogui.write(text, interval=0.1)
-        return True, self.language_manager.get_text("typing", [text])
+        """Type text naturally"""
+        pyautogui.write(text, interval=0.05)
+        return True, self.language_manager.get_text("typing")
     
     def _scroll_up(self):
         """Scroll up"""
-        pyautogui.scroll(100)
+        pyautogui.scroll(300)
         return True, self.language_manager.get_text("scrolled_up")
     
     def _scroll_down(self):
         """Scroll down"""
-        pyautogui.scroll(-100)
+        pyautogui.scroll(-300)
         return True, self.language_manager.get_text("scrolled_down")
     
     def _close_window(self):
@@ -133,6 +146,12 @@ class CommandHandler:
         return True, self.language_manager.get_text("closing_window")
     
     def _shutdown(self):
-        """Shutdown computer"""
-        os.system("shutdown /s /t 5")
-        return True, self.language_manager.get_text("shutting_down")
+        """Shutdown computer with confirmation"""
+        os.system("shutdown /s /t 30")
+        return True, "System will shut down in 30 seconds. You can cancel with 'shutdown /a'"
+    
+    def _search_web(self, query):
+        """Search the web"""
+        search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+        webbrowser.open(search_url)
+        return True, f"Searching for {query}"
