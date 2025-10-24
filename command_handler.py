@@ -2,12 +2,13 @@ import os
 import webbrowser
 import pyautogui
 import subprocess
+from language_manager import LanguageManager
 
 class CommandHandler:
     def __init__(self):
         self.applications = {
             'notepad': 'notepad.exe',
-            'calculator': 'calc.exe',
+            'calculator': 'calc.exe', 
             'paint': 'mspaint.exe',
             'file explorer': 'explorer.exe',
             'cmd': 'cmd.exe',
@@ -18,12 +19,18 @@ class CommandHandler:
         
         self.websites = {
             'youtube': 'https://www.youtube.com',
-            'google': 'https://www.google.com',
+            'google': 'https://www.google.com', 
             'github': 'https://www.github.com',
             'facebook': 'https://www.facebook.com',
             'twitter': 'https://www.twitter.com',
             'instagram': 'https://www.instagram.com'
         }
+        
+        self.language_manager = LanguageManager()
+    
+    def set_language(self, language):
+        """Set language for command responses"""
+        return self.language_manager.set_language(language)
     
     def execute_command(self, command_type, target=None):
         """Execute system commands"""
@@ -60,12 +67,12 @@ class CommandHandler:
         app_key = app_name.lower()
         if app_key in self.applications:
             os.system(f"start {self.applications[app_key]}")
-            return True, f"Opening {app_name}"
+            return True, f"{self.language_manager.get_text('opening')} {app_name}"
         else:
             # Try to open directly
             try:
                 os.system(f"start {app_name}")
-                return True, f"Opening {app_name}"
+                return True, f"{self.language_manager.get_text('opening')} {app_name}"
             except:
                 return False, f"Could not find application: {app_name}"
     
@@ -74,58 +81,58 @@ class CommandHandler:
         site_key = site_name.lower()
         if site_key in self.websites:
             webbrowser.open(self.websites[site_key])
-            return True, f"Opening {site_name}"
+            return True, f"{self.language_manager.get_text('opening')} {site_name}"
         else:
             # Try to open as URL
             if not site_name.startswith(('http://', 'https://')):
                 site_name = 'https://' + site_name
             webbrowser.open(site_name)
-            return True, f"Opening website"
+            return True, f"{self.language_manager.get_text('opening')} website"
     
     def _volume_up(self):
         """Increase volume"""
         for _ in range(5):
             pyautogui.press('volumeup')
-        return True, "Volume increased"
+        return True, self.language_manager.get_text("volume_up")
     
     def _volume_down(self):
         """Decrease volume"""
         for _ in range(5):
             pyautogui.press('volumedown')
-        return True, "Volume decreased"
+        return True, self.language_manager.get_text("volume_down")
     
     def _volume_mute(self):
         """Mute volume"""
         pyautogui.press('volumemute')
-        return True, "Volume muted"
+        return True, self.language_manager.get_text("volume_mute")
     
     def _take_screenshot(self):
         """Take screenshot"""
         screenshot = pyautogui.screenshot()
         screenshot.save("screenshot.png")
-        return True, "Screenshot taken and saved"
+        return True, self.language_manager.get_text("screenshot")
     
     def _type_text(self, text):
         """Type text"""
         pyautogui.write(text, interval=0.1)
-        return True, f"Typed: {text}"
+        return True, self.language_manager.get_text("typing", [text])
     
     def _scroll_up(self):
         """Scroll up"""
         pyautogui.scroll(100)
-        return True, "Scrolled up"
+        return True, self.language_manager.get_text("scrolled_up")
     
     def _scroll_down(self):
         """Scroll down"""
         pyautogui.scroll(-100)
-        return True, "Scrolled down"
+        return True, self.language_manager.get_text("scrolled_down")
     
     def _close_window(self):
         """Close current window"""
         pyautogui.hotkey('alt', 'f4')
-        return True, "Closing current window"
+        return True, self.language_manager.get_text("closing_window")
     
     def _shutdown(self):
         """Shutdown computer"""
         os.system("shutdown /s /t 5")
-        return True, "Shutting down in 5 seconds"
+        return True, self.language_manager.get_text("shutting_down")
