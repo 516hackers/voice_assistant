@@ -1,69 +1,69 @@
 import speech_recognition as sr
 import pyttsx3
-from config import WAKE_WORD, LANGUAGE, LISTEN_TIMEOUT, COMMAND_TIMEOUT
-from language_manager import LanguageManager
+import threading
+import time
+from config import *
 
 class VoiceEngine:
     def __init__(self):
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
         self.tts_engine = pyttsx3.init()
-        self.language_manager = LanguageManager()
+        self.is_listening = False
+        self.current_text = ""
         self.setup_voice()
     
     def setup_voice(self):
-        """Configure text-to-speech settings"""
+        """Configure natural female voice"""
         voices = self.tts_engine.getProperty('voices')
-        # Use available voices (index might vary by system)
-        if len(voices) > 1:
-            self.tts_engine.setProperty('voice', voices[1].id)  # Female voice
-        self.tts_engine.setProperty('rate', 150)
-        self.tts_engine.setProperty('volume', 0.8)
-    
-    def set_language(self, language):
-        """Set language for voice engine"""
-        return self.language_manager.set_language(language)
+        # Try to find a natural female voice
+        for voice in voices:
+            if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
+                self.tts_engine.setProperty('voice', voice.id)
+                break
+        else:
+            # Fallback to any available voice
+            if len(voices) > 1:
+                self.tts_engine.setProperty('voice', voices[1].id)
+        
+        self.tts_engine.setProperty('rate', SPEECH_RATE)
+        self.tts_engine.setProperty('volume', VOLUME)
     
     def speak(self, text):
-        """Convert text to speech"""
+        """Convert text to speech with natural pacing"""
         print(f"🤖 Buddy: {text}")
+        # Add small delay for natural conversation flow
+        time.sleep(0.3)
         self.tts_engine.say(text)
         self.tts_engine.runAndWait()
     
-    def listen_for_wake_word(self):
-        """Continuously listen for the wake word"""
+    def continuous_listen(self, callback):
+        """Continuously listen for speech"""
+        self.is_listening = True
         with self.microphone as source:
-            print(self.language_manager.get_text("listening_for_wake"))
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
+            print("🎯 I'm always listening. Just speak naturally...")
             
-            try:
-                audio = self.recognizer.listen(source, timeout=3, phrase_time_limit=3)
-                text = self.recognizer.recognize_google(audio).lower()
-                print(f"👤 You said: {text}")
-                return text
-            except sr.WaitTimeoutError:
-                return ""
-            except sr.UnknownValueError:
-                return ""
-            except sr.RequestError as e:
-                print(f"Speech recognition error: {e}")
-                return ""
+            while self.is_listening:
+                try:
+                    # Listen with no timeout for continuous listening
+                    audio = self.recognizer.listen(source, timeout=None, phrase_time_limit=5)
+                    text = self.recognizer.recognize_google(audio).lower()
+                    print(f"👤 You: {text}")
+                    callback(text)
+                    
+                except sr.WaitTimeoutError:
+                    continue
+                except sr.UnknownValueError:
+                    # Don't announce failure, just continue listening
+                    continue
+                except sr.RequestError as e:
+                    print(f"Speech recognition error: {e}")
+                    continue
+                except Exception as e:
+                    print(f"Unexpected error: {e}")
+                    continue
     
-    def listen_for_command(self):
-        """Listen for command after wake word"""
-        with self.microphone as source:
-            print(self.language_manager.get_text("listening_for_command"))
-            self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            
-            try:
-                audio = self.recognizer.listen(source, timeout=COMMAND_TIMEOUT, phrase_time_limit=COMMAND_TIMEOUT)
-                command = self.recognizer.recognize_google(audio).lower()
-                print(f"💬 Command: {command}")
-                return command
-            except sr.WaitTimeoutError:
-                return ""
-            except sr.UnknownValueError:
-                return "unknown"
-            except sr.RequestError as e:
-                print(f"Speech recognition error: {e}")
-                return "error"
+    def stop_listening(self):
+        """Stop continuous listening"""
+        self.is_listening = False
