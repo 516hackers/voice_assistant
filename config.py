@@ -1,4 +1,5 @@
-WAKE_WORD = "assistant"
+WAKE_WORD = "buddy"
+LANGUAGE = "english"  # Default language: "english" or "urdu"
 COMMAND_TIMEOUT = 8
 LISTEN_TIMEOUT = 5
-ENERGY_THRESHOLD = 300  # Adjust based on your microphone sensitivity
+ENERGY_THRESHOLD = 300
