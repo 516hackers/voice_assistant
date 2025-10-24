@@ -1,18 +1,22 @@
 from assistant import VoiceAssistant
 
 def main():
-    print("🚀 Starting Buddy Voice Assistant...")
-    print("🔧 Initializing components...")
+    print("🚀 Starting Enhanced Buddy Assistant...")
+    print("🔧 Initializing natural language processing...")
+    print("🎯 Features:")
+    print("   • Continuous listening - no wake word needed")
+    print("   • Natural human-like conversations")
+    print("   • Urdu and English understanding")
+    print("   • Real-time system control")
+    print("   • Female personality with emotions")
+    print("-" * 60)
     
     try:
         assistant = VoiceAssistant()
-        print("✅ Buddy initialized successfully!")
-        print(f"🎯 Wake word: 'buddy'")
-        print("🌐 Languages: English & Urdu")
-        print("💡 Say 'buddy' followed by your command")
-        print("💬 Say 'switch to urdu' or 'switch to english' to change language")
-        print("⏹️  Say 'exit' or 'quit' to stop the assistant")
-        print("-" * 50)
+        print("✅ Buddy is ready!")
+        print("💬 Just start speaking naturally...")
+        print("⏹️  Say 'exit', 'quit', or 'bye' to stop")
+        print("-" * 60)
         
         # Start the assistant
         assistant.run()
@@ -20,7 +24,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\n🛑 Assistant stopped by user")
     except Exception as e:
-        print(f"❌ Error starting assistant: {e}")
+        print(f"❌ Error: {e}")
 
 if __name__ == "__main__":
     main()
