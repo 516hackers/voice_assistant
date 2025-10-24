@@ -49,7 +49,7 @@ class AIBrain:
         elif any(word in query for word in ['what can you do', 'your capabilities', 'کیا کر سکتے ہو', 'تمہاری صلاحیتیں']):
             return self._list_capabilities()
         
-        elif any word in query for word in ['joke', 'tell joke', 'make me laugh', 'لطیفہ', 'چٹکلہ', 'ہنساؤ']):
+        elif any(word in query for word in ['joke', 'tell joke', 'make me laugh', 'لطیفہ', 'چٹکلہ', 'ہنساؤ']):
             return self._tell_joke()
         
         elif any(word in query for word in ['calculate', 'math', 'what is', 'حساب کرو', 'حساب کتاب']):
