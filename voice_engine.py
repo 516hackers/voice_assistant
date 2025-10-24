@@ -30,24 +30,24 @@ class VoiceEngine:
         self.tts_engine.say(text)
         self.tts_engine.runAndWait()
     
-    def listen_for_wake_word(self):
-        """Continuously listen for the wake word"""
-        with self.microphone as source:
-            print(self.language_manager.get_text("listening_for_wake"))
-            self.recognizer.adjust_for_ambient_noise(source)
-            
-            try:
-                audio = self.recognizer.listen(source, timeout=LISTEN_TIMEOUT)
-                text = self.recognizer.recognize_google(audio).lower()
-                print(f"👤 You said: {text}")
-                return text
-            except sr.WaitTimeoutError:
-                return ""
-            except sr.UnknownValueError:
-                return ""
-            except sr.RequestError as e:
-                print(f"Speech recognition error: {e}")
-                return ""
+   def listen_for_wake_word(self):
+    """Continuously listen for the wake word"""
+    with self.microphone as source:
+        print(self.language_manager.get_text("listening_for_wake"))
+        self.recognizer.adjust_for_ambient_noise(source, duration=1)
+        
+        try:
+            audio = self.recognizer.listen(source, timeout=3, phrase_time_limit=3)
+            text = self.recognizer.recognize_google(audio).lower()
+            print(f"👤 You said: {text}")
+            return text
+        except sr.WaitTimeoutError:
+            return ""
+        except sr.UnknownValueError:
+            return ""
+        except sr.RequestError as e:
+            print(f"Speech recognition error: {e}")
+            return ""
     
     def listen_for_command(self):
         """Listen for command after wake word"""
