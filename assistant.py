@@ -10,62 +10,77 @@ class VoiceAssistant:
         self.command_handler = CommandHandler()
         self.is_listening = False
     
+    def set_language(self, language):
+        """Set language for all components"""
+        self.voice_engine.set_language(language)
+        self.ai_brain.set_language(language)
+        self.command_handler.set_language(language)
+    
     def process_command(self, command):
         """Process voice commands and decide action"""
         if not command or command == "unknown":
-            return "I didn't catch that. Could you please repeat?"
+            return self.voice_engine.language_manager.get_text("not_understood")
+        
+        # Language switching
+        if "urdu" in command or "اردو" in command:
+            self.set_language("urdu")
+            return "زباز تبدیل کر دی گئی ہے۔ اب میں اردو میں بات کروں گا۔"
+        
+        elif "english" in command or "انگریزی" in command:
+            self.set_language("english") 
+            return "Language changed to English. I will now speak in English."
         
         # System control commands
-        if "open" in command:
-            app_name = command.replace("open", "").strip()
-            if "website" in command or "web" in command:
-                site_name = command.replace("open", "").replace("website", "").replace("web", "").strip()
+        if "open" in command or "کھولو" in command:
+            if "website" in command or "web" in command or "ویب سائٹ" in command:
+                site_name = command.replace("open", "").replace("website", "").replace("web", "").replace("کھولو", "").replace("ویب سائٹ", "").strip()
                 success, response = self.command_handler.execute_command("open_website", site_name)
                 return response
             else:
+                app_name = command.replace("open", "").replace("کھولو", "").strip()
                 success, response = self.command_handler.execute_command("open_app", app_name)
                 return response
         
-        elif "volume up" in command:
+        elif "volume up" in command or "آواز بڑھاؤ" in command:
             success, response = self.command_handler.execute_command("volume_up")
             return response
         
-        elif "volume down" in command:
+        elif "volume down" in command or "آواز گھٹاؤ" in command:
             success, response = self.command_handler.execute_command("volume_down")
             return response
         
-        elif "mute" in command:
+        elif "mute" in command or "خاموش" in command:
             success, response = self.command_handler.execute_command("volume_mute")
             return response
         
-        elif "screenshot" in command:
+        elif "screenshot" in command or "سکرین شاٹ" in command:
             success, response = self.command_handler.execute_command("screenshot")
             return response
         
-        elif "type" in command:
-            text = command.replace("type", "").strip()
+        elif "type" in command or "ٹائپ" in command:
+            text = command.replace("type", "").replace("ٹائپ", "").strip()
             success, response = self.command_handler.execute_command("type_text", text)
             return response
         
-        elif "scroll up" in command:
+        elif "scroll up" in command or "اوپر سکرول" in command:
             success, response = self.command_handler.execute_command("scroll_up")
             return response
         
-        elif "scroll down" in command:
+        elif "scroll down" in command or "نیچے سکرول" in command:
             success, response = self.command_handler.execute_command("scroll_down")
             return response
         
-        elif "close" in command and "window" in command:
+        elif "close" in command and "window" in command or "بند کرو" in command:
             success, response = self.command_handler.execute_command("close_window")
             return response
         
-        elif "shutdown" in command or "turn off" in command:
+        elif "shutdown" in command or "turn off" in command or "بند کرو" in command:
             success, response = self.command_handler.execute_command("shutdown")
             return response
         
-        elif "exit" in command or "quit" in command or "stop" in command:
+        elif "exit" in command or "quit" in command or "stop" in command or "روکو" in command:
             self.is_listening = False
-            return "Goodbye! Have a great day!"
+            return self.voice_engine.language_manager.get_text("goodbye")
         
         else:
             # Use AI brain for conversational responses
@@ -73,7 +88,7 @@ class VoiceAssistant:
     
     def run(self):
         """Main assistant loop"""
-        self.voice_engine.speak("Voice assistant activated. Say 'assistant' to wake me up!")
+        self.voice_engine.speak(self.voice_engine.language_manager.get_text("activated"))
         self.is_listening = True
         
         while self.is_listening:
@@ -81,7 +96,7 @@ class VoiceAssistant:
             wake_text = self.voice_engine.listen_for_wake_word()
             
             if WAKE_WORD in wake_text:
-                self.voice_engine.speak("Yes? I'm listening...")
+                self.voice_engine.speak(self.voice_engine.language_manager.get_text("listening"))
                 
                 # Listen for command
                 command = self.voice_engine.listen_for_command()
