@@ -4,47 +4,62 @@ import datetime
 class Personality:
     def __init__(self):
         self.user_name = None
-        self.mood = "happy"
         self.conversation_history = []
+        
+    def add_to_history(self, user_input, response):
+        """Keep conversation history"""
+        self.conversation_history.append({"user": user_input, "assistant": response})
+        if len(self.conversation_history) > 10:
+            self.conversation_history.pop(0)
         
     def get_greeting(self):
         """Natural human-like greetings"""
         hour = datetime.datetime.now().hour
-        greetings = {
-            "morning": [
-                "Good morning! I hope you're starting your day well. What can I do for you?",
-                "Morning! Ready to tackle the day together?",
-                "Hello there! Beautiful morning, isn't it? How can I help?",
-                "Rise and shine! What would you like me to do for you today?"
-            ],
-            "afternoon": [
-                "Good afternoon! How's your day going so far?",
-                "Afternoon! Need any help with your tasks?",
-                "Hello! Hope you're having a productive day. What can I do for you?",
-                "Hi there! How can I assist you this afternoon?"
-            ],
-            "evening": [
-                "Good evening! How was your day?",
-                "Evening! Time to relax and get things done. What do you need?",
-                "Hello! Wonderful evening, isn't it? How can I help?",
-                "Hi! Hope you had a great day. What would you like me to do?"
-            ],
-            "night": [
-                "Still up? I'm here if you need anything!",
-                "Working late? I'm here to help you out.",
-                "Hello! Quiet night? What can I do for you?",
-                "Hi there! Need some nighttime assistance?"
-            ]
-        }
         
         if 5 <= hour < 12:
-            return random.choice(greetings["morning"])
+            greetings = [
+                "Good morning! Ready to tackle the day together?",
+                "Morning sunshine! What can I help you with today?",
+                "Hello there! Beautiful morning, isn't it?",
+                "Rise and shine! How can I assist you?"
+            ]
         elif 12 <= hour < 17:
-            return random.choice(greetings["afternoon"])
+            greetings = [
+                "Good afternoon! How's your day going?",
+                "Afternoon! What can I do for you?",
+                "Hello! Hope you're having a productive day.",
+                "Hi there! Ready to get things done?"
+            ]
         elif 17 <= hour < 22:
-            return random.choice(greetings["evening"])
+            greetings = [
+                "Good evening! How was your day?",
+                "Evening! Time to relax and get things done.",
+                "Hello! Wonderful evening, isn't it?",
+                "Hi! Hope you had a great day."
+            ]
         else:
-            return random.choice(greetings["night"])
+            greetings = [
+                "Still up? I'm here if you need anything!",
+                "Working late? Don't worry, I'm here with you!",
+                "Hello night owl! What can I do for you?",
+                "Hi! Even at night, I'm here to help!"
+            ]
+        
+        return random.choice(greetings)
+    
+    def get_confirmation(self, action):
+        """Natural confirmations for actions"""
+        confirmations = [
+            f"Sure thing, {action} for you...",
+            f"Got it! {action} now...",
+            f"Alright, {action} for you...",
+            f"On it! {action}...",
+            f"Perfect! {action}...",
+            f"Okay, {action}...",
+            f"Right away! {action}...",
+            f"Consider it done! {action}..."
+        ]
+        return random.choice(confirmations)
     
     def get_thanks_response(self):
         """Natural responses to thanks"""
@@ -69,18 +84,6 @@ class Personality:
         ]
         return random.choice(apologies)
     
-    def get_confirmation(self):
-        """Confirming actions"""
-        confirmations = [
-            "Sure thing!",
-            "On it!",
-            "Consider it done!",
-            "Right away!",
-            "I'm on it!",
-            "Working on that now!"
-        ]
-        return random.choice(confirmations)
-    
     def get_farewell(self):
         """Natural goodbye messages"""
         farewells = [
@@ -92,8 +95,22 @@ class Personality:
         ]
         return random.choice(farewells)
     
-    def add_to_history(self, user_input, response):
-        """Keep conversation history"""
-        self.conversation_history.append({"user": user_input, "assistant": response})
-        if len(self.conversation_history) > 10:  # Keep last 10 exchanges
-            self.conversation_history.pop(0)
+    def get_search_response(self, query):
+        """Responses for search actions"""
+        responses = [
+            f"Got it! Here's what I found about {query}...",
+            f"Sure! Searching for {query}...",
+            f"Alright, looking up {query} for you...",
+            f"On it! Searching the web for {query}..."
+        ]
+        return random.choice(responses)
+    
+    def get_music_response(self):
+        """Responses for music actions"""
+        responses = [
+            "Perfect! Opening some relaxing music for you 🎶",
+            "Great choice! Playing music for you...",
+            "Awesome! Let me play some tunes for you 🎵",
+            "Sure thing! Starting some music for you..."
+        ]
+        return random.choice(responses)
