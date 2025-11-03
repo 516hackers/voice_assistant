@@ -7,4 +7,4 @@
 
 <p align="center">
   <img src="https://readme-typing-svg.herokuapp.com?color=%2310b981&lines=$+npm+start;>+Initializing...;>+Connected+to+Ayamil+Coders" />
-</p>
+</p> 
