@@ -5,6 +5,6 @@
 ![Dark mode](./banner-dark.svg#gh-dark-mode-only)
 
 
-<p align="center">
+<p align="center">v
   <img src="https://readme-typing-svg.herokuapp.com?color=%2310b981&lines=$+npm+start;>+Initializing...;>+Connected+to+Ayamil+Coders" />
 </p>  
