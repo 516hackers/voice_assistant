@@ -3,7 +3,7 @@
 ![Tech Skills](https://skillicons.dev/icons?i=html,css,js,react,php,laravel,mysql,tailwind,bootstrap,figma)
 ![Light mode](./banner-light.svg#gh-light-mode-only)
 ![Dark mode](./banner-dark.svg#gh-dark-mode-only)
-
+ 
 
 <p align="center">v
   <img src="https://readme-typing-svg.herokuapp.com?color=%2310b981&lines=$+npm+start;>+Initializing...;>+Connected+to+Ayamil+Coders" />
